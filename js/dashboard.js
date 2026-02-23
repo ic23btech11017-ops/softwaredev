@@ -129,6 +129,23 @@ window.ERP_Dashboard = (function () {
     }
 
     /* ══════════════════════════════════════════
+       ROLE → ACCESSIBLE SECTIONS MAP
+       (mirrors sidebar data-roles attributes)
+       ══════════════════════════════════════════ */
+    var ROLE_SECTIONS = {
+        admin: ['dashboard', 'clients', 'projects', 'backlog', 'sprints', 'tasks', 'qa-defects', 'resources', 'time-tracking', 'invoices', 'reports', 'integrations', 'settings'],
+        pm: ['dashboard', 'clients', 'projects', 'backlog', 'sprints', 'tasks', 'qa-defects', 'resources', 'time-tracking', 'invoices', 'reports'],
+        developer: ['dashboard', 'sprints', 'tasks', 'time-tracking'],
+        qa: ['dashboard', 'sprints', 'qa-defects'],
+        accounts: ['dashboard', 'invoices', 'reports']
+    };
+
+    function canAccess(role, section) {
+        var sections = ROLE_SECTIONS[role] || ROLE_SECTIONS.admin;
+        return sections.indexOf(section) !== -1;
+    }
+
+    /* ══════════════════════════════════════════
        SHARED RENDERING HELPERS
        ══════════════════════════════════════════ */
 
@@ -146,13 +163,15 @@ window.ERP_Dashboard = (function () {
         return '<div class="dashboard-grid">' + cards.join('') + '</div>';
     }
 
-    /** Insight banner */
-    function bannerHTML() {
-        var warnings = [];
-        if (criticalDefects() > 0) warnings.push({ text: criticalDefects() + ' critical defect' + (criticalDefects() > 1 ? 's' : '') + ' open', section: 'qa-defects' });
-        if (utilizationPct() > 95) warnings.push({ text: 'Team utilization at ' + utilizationPct() + '%', section: 'resources' });
-        if (pendingInvoices() > 5) warnings.push({ text: pendingInvoices() + ' invoices pending', section: 'invoices' });
-        if (sprintCompletion() < 70 && sprintCompletion() > 0) warnings.push({ text: 'Sprint completion at ' + sprintCompletion() + '%', section: 'sprints' });
+    /** Insight banner — only shows warnings for sections the role can access */
+    function bannerHTML(role) {
+        var allWarnings = [
+            { cond: criticalDefects() > 0, text: criticalDefects() + ' critical defect' + (criticalDefects() > 1 ? 's' : '') + ' open', section: 'qa-defects' },
+            { cond: utilizationPct() > 95, text: 'Team utilization at ' + utilizationPct() + '%', section: 'resources' },
+            { cond: pendingInvoices() > 5, text: pendingInvoices() + ' invoices pending', section: 'invoices' },
+            { cond: sprintCompletion() < 70 && sprintCompletion() > 0, text: 'Sprint completion at ' + sprintCompletion() + '%', section: 'sprints' }
+        ];
+        var warnings = allWarnings.filter(function (w) { return w.cond && canAccess(role, w.section); });
 
         if (warnings.length) {
             var items = warnings.map(function (w) {
@@ -168,18 +187,24 @@ window.ERP_Dashboard = (function () {
             '<div><strong>Operations Running Smoothly</strong><div class="dashboard-banner-details">All systems are within normal parameters.</div></div></div></div>';
     }
 
-    /** Recent activity list */
-    function activityHTML() {
+    /** Recent activity list — filtered by role permissions */
+    function activityHTML(role) {
         var items = [];
-        stories().filter(function (s) { return s.status === 'done' || s.status === 'release_ready'; }).slice(0, 3).forEach(function (s) {
-            items.push({ text: 'Task completed: ' + s.title, badge: 'Done', cls: 'badge-green', section: 'tasks' });
-        });
-        defectList().filter(function (d) { return d.status === 'Open'; }).slice(0, 2).forEach(function (d) {
-            items.push({ text: 'Defect created: ' + d.title, badge: d.severity, cls: d.severity === 'Critical' ? 'badge-red' : 'badge-amber', section: 'qa-defects' });
-        });
-        invoiceList().slice(0, 2).forEach(function (inv) {
-            items.push({ text: 'Invoice ' + inv.id + ' (' + (inv.status || 'draft') + ')', badge: inv.status || 'draft', cls: inv.status === 'sent' ? 'badge-blue' : 'badge-green', section: 'invoices' });
-        });
+        if (canAccess(role, 'tasks')) {
+            stories().filter(function (s) { return s.status === 'done' || s.status === 'release_ready'; }).slice(0, 3).forEach(function (s) {
+                items.push({ text: 'Task completed: ' + s.title, badge: 'Done', cls: 'badge-green', section: 'tasks' });
+            });
+        }
+        if (canAccess(role, 'qa-defects')) {
+            defectList().filter(function (d) { return d.status === 'Open'; }).slice(0, 2).forEach(function (d) {
+                items.push({ text: 'Defect created: ' + d.title, badge: d.severity, cls: d.severity === 'Critical' ? 'badge-red' : 'badge-amber', section: 'qa-defects' });
+            });
+        }
+        if (canAccess(role, 'invoices')) {
+            invoiceList().slice(0, 2).forEach(function (inv) {
+                items.push({ text: 'Invoice ' + inv.id + ' (' + (inv.status || 'draft') + ')', badge: inv.status || 'draft', cls: inv.status === 'sent' ? 'badge-blue' : 'badge-green', section: 'invoices' });
+            });
+        }
         if (!items.length) return '<div class="card"><div class="card-title">Recent Activity</div><p class="text-muted" style="padding:16px 0;">No recent activity.</p></div>';
         var html = '<div class="card"><div class="card-title">Recent Activity</div><ul class="dashboard-activity-list">';
         items.forEach(function (it) {
@@ -188,21 +213,25 @@ window.ERP_Dashboard = (function () {
         return html + '</ul></div>';
     }
 
-    /** Upcoming deadlines list */
-    function deadlinesHTML() {
+    /** Upcoming deadlines list — filtered by role permissions */
+    function deadlinesHTML(role) {
         var items = [];
-        if (window.ERP_Sprint && window.ERP_Sprint.getSprints) {
+        if (canAccess(role, 'sprints') && window.ERP_Sprint && window.ERP_Sprint.getSprints) {
             window.ERP_Sprint.getSprints().forEach(function (sp) {
                 if (sp.status !== 'completed') items.push({ text: sp.name + ' ends soon', urgent: true, section: 'sprints' });
             });
         }
-        var today = new Date().toISOString().substring(0, 10);
-        invoiceList().forEach(function (inv) {
-            if (inv.dueDate && inv.status === 'sent') items.push({ text: inv.id + ' due ' + inv.dueDate, urgent: inv.dueDate <= today, section: 'invoices' });
-        });
-        stories().filter(function (s) { return s.status === 'in_progress'; }).slice(0, 2).forEach(function (s) {
-            items.push({ text: s.title + ' (in progress)', urgent: false, section: 'tasks' });
-        });
+        if (canAccess(role, 'invoices')) {
+            var today = new Date().toISOString().substring(0, 10);
+            invoiceList().forEach(function (inv) {
+                if (inv.dueDate && inv.status === 'sent') items.push({ text: inv.id + ' due ' + inv.dueDate, urgent: inv.dueDate <= today, section: 'invoices' });
+            });
+        }
+        if (canAccess(role, 'tasks')) {
+            stories().filter(function (s) { return s.status === 'in_progress'; }).slice(0, 2).forEach(function (s) {
+                items.push({ text: s.title + ' (in progress)', urgent: false, section: 'tasks' });
+            });
+        }
         if (!items.length) return '<div class="card"><div class="card-title">Upcoming Deadlines</div><p class="text-muted" style="padding:16px 0;">No upcoming deadlines.</p></div>';
         var html = '<div class="card"><div class="card-title">Upcoming Deadlines</div><ul class="dashboard-deadline-list">';
         items.slice(0, 6).forEach(function (it) {
@@ -213,8 +242,8 @@ window.ERP_Dashboard = (function () {
     }
 
     /** Bottom split section */
-    function bottomSplitHTML() {
-        return '<div class="dashboard-split"><div class="dashboard-split-left">' + activityHTML() + '</div><div class="dashboard-split-right">' + deadlinesHTML() + '</div></div>';
+    function bottomSplitHTML(role) {
+        return '<div class="dashboard-split"><div class="dashboard-split-left">' + activityHTML(role) + '</div><div class="dashboard-split-right">' + deadlinesHTML(role) + '</div></div>';
     }
 
     /** Wire up all [data-section] click handlers */
@@ -233,6 +262,7 @@ window.ERP_Dashboard = (function () {
        ══════════════════════════════════════════ */
 
     function renderAdminDashboard(root) {
+        var role = 'admin';
         var row1 = [
             cardHTML(ICONS.folder, 'Active Projects', activeProjects(), 'var(--primary)', 'projects'),
             cardHTML(ICONS.clipboard, 'Open Tasks', openTasks(), 'var(--info)', 'tasks'),
@@ -243,10 +273,11 @@ window.ERP_Dashboard = (function () {
             cardHTML(ICONS.chart, 'Utilization', utilizationPct() + '%', 'var(--warning)', 'resources'),
             cardHTML(ICONS.activity, 'Recent Activity', stories().filter(function (s) { return s.status === 'done'; }).length + ' completed', 'var(--info)', 'tasks')
         ];
-        root.innerHTML = bannerHTML() + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML();
+        root.innerHTML = bannerHTML(role) + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML(role);
     }
 
     function renderPMDashboard(root) {
+        var role = 'pm';
         var row1 = [
             cardHTML(ICONS.chart, 'Sprint Completion', sprintCompletion() + '%', 'var(--primary)', 'sprints'),
             cardHTML(ICONS.ban, 'Blocked Tasks', blockedTasks(), 'var(--danger)', 'tasks'),
@@ -256,37 +287,39 @@ window.ERP_Dashboard = (function () {
         var row2 = [
             cardHTML(ICONS.calendar, 'Upcoming Deadlines', invoiceList().filter(function (i) { return i.status === 'sent'; }).length + ' due', 'var(--danger)', 'invoices')
         ];
-        root.innerHTML = bannerHTML() + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML();
+        root.innerHTML = bannerHTML(role) + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML(role);
     }
 
     function renderDeveloperDashboard(root) {
+        var role = 'developer';
         var row1 = [
             cardHTML(ICONS.check, 'My Tasks', myTasks(), 'var(--primary)', 'tasks'),
             cardHTML(ICONS.calendar, 'Tasks Due Today', 0, 'var(--warning)', 'tasks'),
-            cardHTML(ICONS.clock, 'Hours This Week', hoursThisWeek() + 'h', 'var(--info)', 'time-tracking'),
-            cardHTML(ICONS.bug, 'My Open Defects', myDefects(), 'var(--danger)', 'qa-defects')
+            cardHTML(ICONS.clock, 'Hours This Week', hoursThisWeek() + 'h', 'var(--info)', 'time-tracking')
         ];
-        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+        root.innerHTML = bannerHTML(role) + gridHTML(row1) + bottomSplitHTML(role);
     }
 
     function renderQADashboard(root) {
+        var role = 'qa';
         var row1 = [
             cardHTML(ICONS.bug, 'Open Defects', openDefects(), 'var(--danger)', 'qa-defects'),
             cardHTML(ICONS.circle, 'Critical Defects', criticalDefects(), '#DC2626', 'qa-defects'),
             cardHTML(ICONS.check, 'Test Pass Rate', testPassRate() + '%', 'var(--success)', 'qa-defects'),
             cardHTML(ICONS.flask, 'Active Test Runs', activeTestRuns(), 'var(--info)', 'qa-defects')
         ];
-        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+        root.innerHTML = bannerHTML(role) + gridHTML(row1) + bottomSplitHTML(role);
     }
 
     function renderAccountsDashboard(root) {
+        var role = 'accounts';
         var row1 = [
             cardHTML(ICONS.dollar, 'Monthly Revenue', '$' + monthlyRevenue().toLocaleString(), 'var(--success)', 'invoices'),
             cardHTML(ICONS.file, 'Pending Invoices', pendingInvoices(), 'var(--warning)', 'invoices'),
             cardHTML(ICONS.alert, 'Overdue Invoices', overdueInvoices(), 'var(--danger)', 'invoices'),
             cardHTML(ICONS.hourglass, 'Approved Billable Hrs', approvedBillableHours() + 'h', 'var(--info)', 'time-tracking')
         ];
-        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+        root.innerHTML = bannerHTML(role) + gridHTML(row1) + bottomSplitHTML(role);
     }
 
     /* ══════════════════════════════════════════
