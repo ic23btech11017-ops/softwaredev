@@ -39,7 +39,7 @@
   --sidebar-border: #F0F0F5;
   --sidebar-text: #6B7280;
   --sidebar-text-hover: #374151;
-  --sidebar-active-bg: var(--gradient);
+  --sidebar-active-bg: var(--primary);
   --sidebar-active-text: #ffffff;
   --sidebar-brand-text: #111827;
 
@@ -1061,10 +1061,9 @@ body {
 }
 
 .sprint-tab.active {
-  background: var(--gradient);
+  background: var(--primary);
   color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-color: var(--primary);
 }
 
 .sprint-analytics {
@@ -1253,10 +1252,9 @@ body {
 }
 
 .qa-tab.active {
-  background: var(--gradient);
+  background: var(--primary);
   color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-color: var(--primary);
 }
 
 .qa-tab-content {
@@ -1518,10 +1516,9 @@ body {
 }
 
 .time-tab.active {
-  background: var(--gradient);
+  background: var(--primary);
   color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-color: var(--primary);
 }
 
 .time-tab-content {
@@ -1640,10 +1637,9 @@ body {
 }
 
 .invoice-tab.active {
-  background: var(--gradient);
+  background: var(--primary);
   color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-color: var(--primary);
 }
 
 .invoice-tab-content {
@@ -1759,10 +1755,9 @@ body {
 }
 
 .reports-tab.active {
-  background: var(--gradient);
+  background: var(--primary);
   color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  border-color: var(--primary);
 }
 
 .reports-tab-content {
