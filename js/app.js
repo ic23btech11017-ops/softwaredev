@@ -38,6 +38,9 @@
       .then(function (res) { return res.ok ? res.text() : Promise.reject(new Error('Failed to load')); })
       .then(function (html) {
         contentEl.innerHTML = html;
+        if (sectionName === 'dashboard' && window.ERP_Dashboard && typeof window.ERP_Dashboard.init === 'function') {
+          window.ERP_Dashboard.init();
+        }
         if (sectionName === 'clients' && window.ERP_Clients && typeof window.ERP_Clients.init === 'function') {
           window.ERP_Clients.init();
         }
