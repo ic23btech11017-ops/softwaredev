@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevERP — Software Dev Firm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">DevERP</div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-item active" data-section="dashboard" data-roles="admin pm developer qa accounts">Dashboard
+        </div>
+        <div class="sidebar-item" data-section="clients" data-roles="admin pm">Clients</div>
+        <div class="sidebar-item" data-section="projects" data-roles="admin pm">Projects</div>
+        <div class="sidebar-item" data-section="backlog" data-roles="admin pm">Backlog</div>
+        <div class="sidebar-item" data-section="sprints" data-roles="admin pm developer qa">Sprints</div>
+        <div class="sidebar-item" data-section="tasks" data-roles="admin pm developer">Tasks</div>
+        <div class="sidebar-item" data-section="qa-defects" data-roles="admin pm qa">QA & Defects</div>
+        <div class="sidebar-item" data-section="resources" data-roles="admin pm">Resources</div>
+        <div class="sidebar-item" data-section="time-tracking" data-roles="admin pm developer">Time Tracking</div>
+        <div class="sidebar-item" data-section="invoices" data-roles="admin pm accounts">Invoices</div>
+        <div class="sidebar-item" data-section="reports" data-roles="admin pm accounts">Reports</div>
+        <div class="sidebar-item" data-section="integrations" data-roles="admin">Integrations</div>
+        <div class="sidebar-item" data-section="settings" data-roles="admin">Settings</div>
+      </nav>
+    </aside>
+
+    <header class="header">
+      <div class="header-left">
+        <span class="header-title" id="headerTitle">Dashboard</span>
+        <span class="header-project" id="headerProject">Current Project: None</span>
+      </div>
+      <div class="header-actions">
+        <select class="role-select" id="roleSelect" aria-label="Select role">
+          <option value="admin">Admin</option>
+          <option value="pm">Project Manager</option>
+          <option value="developer">Developer</option>
+          <option value="qa">QA</option>
+          <option value="accounts">Accounts</option>
+        </select>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode"
+          aria-label="Toggle dark mode">&#x1F319;</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <div id="content"></div>
+    </main>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/role.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/clients.js"></script>
+  <script src="js/backlog.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/sprint.js"></script>
+  <script src="js/qa.js"></script>
+  <script src="js/time.js"></script>
+  <script src="js/invoice.js"></script>
+  <script src="js/reports.js"></script>
+
+  <!-- Dark mode toggle -->
+  <script>
+    (function () {
+      var toggle = document.getElementById('themeToggle');
+      var html = document.documentElement;
+      var stored = localStorage.getItem('theme');
+      if (stored === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+        toggle.innerHTML = '&#x2600;&#xFE0F;';
+      }
+      toggle.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          html.removeAttribute('data-theme');
+          toggle.innerHTML = '&#x1F319;';
+          localStorage.setItem('theme', 'light');
+        } else {
+          html.setAttribute('data-theme', 'dark');
+          toggle.innerHTML = '&#x2600;&#xFE0F;';
+          localStorage.setItem('theme', 'dark');
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

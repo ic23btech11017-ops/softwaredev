@@ -1,0 +1,50 @@
+<h1 class="page-title">Sprints</h1>
+
+<div class="sprint-toolbar">
+  <button type="button" class="btn btn-primary" id="sprintCreateBtn">Create Sprint</button>
+</div>
+
+<div class="sprint-list" id="sprintList"></div>
+
+<div class="sprint-detail" id="sprintDetail">
+  <div class="sprint-detail-tabs" id="sprintDetailTabs"></div>
+  <div class="sprint-detail-content" id="sprintDetailContent"></div>
+</div>
+
+<!-- Create Sprint Modal -->
+<div class="modal-overlay" id="sprintModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Create Sprint</h2></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="sprintName">Sprint name</label>
+        <input type="text" id="sprintName" placeholder="e.g. Sprint 16" />
+      </div>
+      <div class="form-group">
+        <label for="sprintDuration">Duration (days)</label>
+        <input type="number" id="sprintDuration" min="1" max="30" value="14" />
+      </div>
+      <div class="form-group">
+        <label for="sprintStartDate">Start date</label>
+        <input type="date" id="sprintStartDate" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="sprintModalCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="sprintModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sprint Summary (after completion) -->
+<div class="modal-overlay" id="sprintSummaryModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="sprintSummaryTitle">Sprint Summary</h2>
+    </div>
+    <div class="modal-body" id="sprintSummaryBody"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" id="sprintSummaryClose">Close</button>
+    </div>
+  </div>
+</div>

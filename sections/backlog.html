@@ -1,0 +1,93 @@
+<h1 class="page-title">Backlog</h1>
+<div class="backlog-header">
+  <div class="backlog-total">Backlog total: <strong id="backlogTotalPoints">0</strong> pts</div>
+</div>
+<div class="backlog-layout detail-closed" id="backlogLayout">
+  <div class="backlog-epics">
+    <div class="backlog-epics-header">
+      <span class="backlog-epics-title">Epics</span>
+      <button type="button" class="btn btn-primary btn-sm" id="backlogAddEpicBtn">Add Epic</button>
+    </div>
+    <div class="backlog-epics-list" id="backlogEpicsList"></div>
+  </div>
+  <div class="backlog-stories" id="backlogStoriesCol">
+    <div class="backlog-stories-header">
+      <span class="backlog-stories-title" id="backlogStoriesTitle">Stories</span>
+      <button type="button" class="btn btn-primary btn-sm" id="backlogAddStoryBtn" style="display:none;">Add Story</button>
+    </div>
+    <div id="backlogStoriesList"></div>
+    <div class="backlog-empty-center" id="backlogStoriesEmpty">Select an epic to view stories.</div>
+  </div>
+  <div class="backlog-detail closed" id="backlogDetailPanel">
+    <div class="backlog-detail-header">
+      <span class="backlog-detail-title" id="backlogDetailTitle">Story</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="backlogDetailClose">Close</button>
+    </div>
+    <div class="backlog-detail-body" id="backlogDetailBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAddEpic">
+  <div class="modal">
+    <div class="modal-header"><h2>Add Epic</h2></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="epicTitle">Epic name</label>
+        <input type="text" id="epicTitle" placeholder="e.g. User authentication" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="modalAddEpicCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="modalAddEpicSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAddStory">
+  <div class="modal">
+    <div class="modal-header"><h2>Add Story</h2></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="storyTitle">Story title</label>
+        <input type="text" id="storyTitle" placeholder="e.g. As a user I can log in with email" />
+      </div>
+      <div class="form-group">
+        <label for="storyDescription">Description</label>
+        <textarea id="storyDescription" placeholder="Acceptance criteria..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="storyPriority">Priority</label>
+        <select id="storyPriority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="storyPoints">Story points</label>
+        <select id="storyPoints">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+          <option value="13">13</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="storyAssignee">Assign developer</label>
+        <select id="storyAssignee">
+          <option value="">— Unassigned —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="storyEpic">Attach to epic</label>
+        <select id="storyEpic"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="modalAddStoryCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="modalAddStorySave">Save</button>
+    </div>
+  </div>
+</div>

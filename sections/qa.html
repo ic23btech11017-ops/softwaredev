@@ -1,0 +1,87 @@
+<h1 class="page-title">QA &amp; Defects</h1>
+
+<div class="qa-tabs" id="qaTabs">
+  <button type="button" class="qa-tab active" data-tab="testcases">Test Cases</button>
+  <button type="button" class="qa-tab" data-tab="testruns">Test Runs</button>
+  <button type="button" class="qa-tab" data-tab="defects">Defects</button>
+  <button type="button" class="qa-tab" data-tab="dashboard">QA Dashboard</button>
+</div>
+
+<div id="qaContent"></div>
+
+<!-- Create Test Case Modal -->
+<div class="modal-overlay" id="qaModalTestCase">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Create Test Case</h2>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="tcTitle">Title</label>
+        <input type="text" id="tcTitle" placeholder="Test case title" />
+      </div>
+      <div class="form-group">
+        <label for="tcStory">Related Story</label>
+        <select id="tcStory">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="tcPriority">Priority</label>
+        <select id="tcPriority">
+          <option value="High">High</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="tcExpected">Expected Result</label>
+        <textarea id="tcExpected" placeholder="Expected outcome"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="qaModalTestCaseCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="qaModalTestCaseSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Defect Modal -->
+<div class="modal-overlay" id="qaModalDefect">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Create Defect</h2>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="defTitle">Title</label>
+        <input type="text" id="defTitle" placeholder="Defect title" />
+      </div>
+      <div class="form-group">
+        <label for="defStory">Related Story</label>
+        <select id="defStory">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="defSeverity">Severity</label>
+        <select id="defSeverity">
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="defAssignee">Assigned Developer</label>
+        <select id="defAssignee">
+          <option value="">— Unassigned —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="qaModalDefectCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="qaModalDefectSave">Save</button>
+    </div>
+  </div>
+</div>
