@@ -1,7 +1,7 @@
-/** Dashboard: role-based cards, insight banner, activity feed, deadlines. */
+/** Dashboard: role-based rendering with per-role layout functions. */
 window.ERP_Dashboard = (function () {
 
-    /* ── SVG line icons (24×24, stroke-based) ── */
+    /* ── SVG line icons ── */
     var ICONS = {
         folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>',
         clipboard: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
@@ -19,163 +19,135 @@ window.ERP_Dashboard = (function () {
         hourglass: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 00-.586-1.414L12 12l-4.414 4.414A2 2 0 007 17.828V22M7 2v4.172a2 2 0 00.586 1.414L12 12l4.414-4.414A2 2 0 0017 6.172V2"/></svg>',
         circle: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>',
         flask: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L3.3 19.4A1 1 0 004.1 21h15.8a1 1 0 00.8-1.6L14 9.5V3"/></svg>',
-        shield: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+        activity: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
     };
 
-    /* ── helpers ── */
+    /* ══════════════════════════════════════════
+       HELPERS
+       ══════════════════════════════════════════ */
     function getRole() {
         return (window.ERP_Role && window.ERP_Role.getRole) ? window.ERP_Role.getRole() : 'admin';
     }
-    function loadSection(s) {
+    function nav(s) {
         if (window.ERP && window.ERP.loadSection) window.ERP.loadSection(s);
     }
     function projects() { return (window.ERP_DATA && window.ERP_DATA.projects) || []; }
     function stories() { return (window.ERP_Backlog && window.ERP_Backlog.getStories) ? window.ERP_Backlog.getStories() : []; }
-    function defects() { return (window.ERP_QA && window.ERP_QA.defects) || []; }
-    function testCases() { return (window.ERP_QA && window.ERP_QA.testCases) || []; }
+    function defectList() { return (window.ERP_QA && window.ERP_QA.defects) || []; }
+    function testCaseList() { return (window.ERP_QA && window.ERP_QA.testCases) || []; }
     function timeLogs() { return (window.ERP_Time && window.ERP_Time.getTimeLogs) ? window.ERP_Time.getTimeLogs() : []; }
     function approvedLogs() { return (window.ERP_Time && window.ERP_Time.getApprovedBillableLogs) ? window.ERP_Time.getApprovedBillableLogs() : []; }
-    function invoices() { return (window.ERP_Invoice && window.ERP_Invoice.getInvoicesAll) ? window.ERP_Invoice.getInvoicesAll() : []; }
+    function invoiceList() { return (window.ERP_Invoice && window.ERP_Invoice.getInvoicesAll) ? window.ERP_Invoice.getInvoicesAll() : []; }
     function currentUser() { return (window.ERP_DATA && window.ERP_DATA.currentUserId) || ''; }
-    function projectId() { return window.currentProjectId || null; }
+
     function scopeLabel() {
-        var pid = projectId();
+        var pid = window.currentProjectId;
         if (!pid) return 'All Projects';
         var p = projects().filter(function (x) { return x.id === pid; })[0];
         return p ? p.name : pid;
     }
 
-    /* ── metric calculators ── */
-    function activeProjects() { return projects().filter(function (p) { return p.status === 'In progress'; }).length; }
-    function openTasks() { return stories().filter(function (s) { return s.status !== 'done' && s.status !== 'release_ready'; }).length; }
-    function openDefects() { return defects().filter(function (d) { return d.status === 'Open'; }).length; }
-    function criticalDefects() { return defects().filter(function (d) { return d.severity === 'Critical' && d.status === 'Open'; }).length; }
-
+    /* ══════════════════════════════════════════
+       METRIC CALCULATORS
+       ══════════════════════════════════════════ */
+    function activeProjects() {
+        return projects().filter(function (p) { return p.status === 'In progress'; }).length;
+    }
+    function openTasks() {
+        return stories().filter(function (s) { return s.status !== 'done' && s.status !== 'release_ready'; }).length;
+    }
+    function openDefects() {
+        return defectList().filter(function (d) { return d.status === 'Open'; }).length;
+    }
+    function criticalDefects() {
+        return defectList().filter(function (d) { return d.severity === 'Critical' && d.status === 'Open'; }).length;
+    }
     function monthlyRevenue() {
         var now = new Date();
         var m = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         var total = 0;
-        invoices().forEach(function (inv) {
+        invoiceList().forEach(function (inv) {
             if (inv.dateCreated && inv.dateCreated.substring(0, 7) === m) total += inv.amount || 0;
         });
         return total;
     }
-
-    function pendingInvoices() { return invoices().filter(function (i) { return i.status === 'sent' || i.status === 'pending'; }).length; }
+    function pendingInvoices() {
+        return invoiceList().filter(function (i) { return i.status === 'sent' || i.status === 'pending'; }).length;
+    }
     function overdueInvoices() {
         var today = new Date().toISOString().substring(0, 10);
-        return invoices().filter(function (i) { return i.status === 'sent' && i.dueDate && i.dueDate < today; }).length;
+        return invoiceList().filter(function (i) { return i.status === 'sent' && i.dueDate && i.dueDate < today; }).length;
     }
-
     function hoursThisWeek() {
         var now = new Date();
         var day = now.getDay() || 7;
-        var monday = new Date(now);
-        monday.setDate(now.getDate() - day + 1);
-        var start = monday.toISOString().substring(0, 10);
+        var mon = new Date(now); mon.setDate(now.getDate() - day + 1);
+        var start = mon.toISOString().substring(0, 10);
         var total = 0;
         timeLogs().forEach(function (l) { if (l.date >= start) total += l.hours || 0; });
         return total;
     }
-
     function approvedBillableHours() {
         var total = 0;
         approvedLogs().forEach(function (l) { total += l.hours || 0; });
         return total;
     }
-
     function utilizationPct() {
         var devs = (window.ERP_Backlog && window.ERP_Backlog.getDevelopers) ? window.ERP_Backlog.getDevelopers() : [];
         if (!devs.length) return 0;
-        var capacity = devs.length * 40;
-        var logged = hoursThisWeek();
-        return capacity > 0 ? Math.round((logged / capacity) * 100) : 0;
+        return Math.round((hoursThisWeek() / (devs.length * 40)) * 100);
     }
-
     function sprintCompletion() {
         if (!window.ERP_Sprint || !window.ERP_Sprint.getSprints) return 0;
         var sprints = window.ERP_Sprint.getSprints();
         if (!sprints.length) return 0;
-        var s = sprints[0];
-        var sprintStories = stories().filter(function (st) { return st.sprintId === s.id; });
+        var sprintStories = stories().filter(function (st) { return st.sprintId === sprints[0].id; });
         if (!sprintStories.length) return 0;
         var done = sprintStories.filter(function (st) { return st.status === 'done' || st.status === 'release_ready'; });
         return Math.round((done.length / sprintStories.length) * 100);
     }
-
     function myTasks() {
         var uid = currentUser();
         return stories().filter(function (s) { return s.assigneeId === uid && s.status !== 'done' && s.status !== 'release_ready'; }).length;
     }
     function myDefects() {
         var uid = currentUser();
-        return defects().filter(function (d) { return d.assignedDeveloperId === uid && d.status === 'Open'; }).length;
+        return defectList().filter(function (d) { return d.assignedDeveloperId === uid && d.status === 'Open'; }).length;
     }
-    function blockedTasks() { return stories().filter(function (s) { return s.status === 'blocked'; }).length; }
+    function blockedTasks() {
+        return stories().filter(function (s) { return s.status === 'blocked'; }).length;
+    }
     function testPassRate() {
-        var tcs = testCases();
+        var tcs = testCaseList();
         if (!tcs.length) return 100;
-        var pass = 0; var total = 0;
-        if (window.ERP_QA) {
-            pass = tcs.length - defects().filter(function (d) { return d.status === 'Open'; }).length;
-            total = tcs.length;
-        }
-        if (total <= 0) return 100;
-        return Math.max(0, Math.round((pass / total) * 100));
+        var pass = tcs.length - defectList().filter(function (d) { return d.status === 'Open'; }).length;
+        return Math.max(0, Math.round((pass / tcs.length) * 100));
     }
     function activeTestRuns() {
         if (!window.ERP_Sprint || !window.ERP_Sprint.getSprints) return 0;
         return window.ERP_Sprint.getSprints().filter(function (sp) { return sp.status !== 'completed'; }).length || 1;
     }
 
-    /* ── card definitions per role ── */
-    function cardsForRole(role) {
-        switch (role) {
-            case 'pm':
-                return [
-                    { label: 'Sprint Completion', value: sprintCompletion() + '%', icon: ICONS.chart, section: 'sprints', color: 'var(--primary)' },
-                    { label: 'Open Stories', value: openTasks(), icon: ICONS.clipboard, section: 'backlog', color: 'var(--info)' },
-                    { label: 'Blocked Tasks', value: blockedTasks(), icon: ICONS.ban, section: 'tasks', color: 'var(--danger)' },
-                    { label: 'Team Utilization', value: utilizationPct() + '%', icon: ICONS.users, section: 'resources', color: 'var(--warning)' },
-                    { label: 'Active Projects', value: activeProjects(), icon: ICONS.folder, section: 'projects', color: 'var(--success)' },
-                    { label: 'Open Defects', value: openDefects(), icon: ICONS.bug, section: 'qa-defects', color: 'var(--danger)' }
-                ];
-            case 'developer':
-                return [
-                    { label: 'My Tasks', value: myTasks(), icon: ICONS.check, section: 'tasks', color: 'var(--primary)' },
-                    { label: 'Tasks Due Today', value: 0, icon: ICONS.calendar, section: 'tasks', color: 'var(--warning)' },
-                    { label: 'Hours This Week', value: hoursThisWeek() + 'h', icon: ICONS.clock, section: 'time-tracking', color: 'var(--info)' },
-                    { label: 'My Open Defects', value: myDefects(), icon: ICONS.bug, section: 'qa-defects', color: 'var(--danger)' },
-                    { label: 'Sprint Progress', value: sprintCompletion() + '%', icon: ICONS.sprint, section: 'sprints', color: 'var(--success)' }
-                ];
-            case 'qa':
-                return [
-                    { label: 'Open Defects', value: openDefects(), icon: ICONS.bug, section: 'qa-defects', color: 'var(--danger)' },
-                    { label: 'Critical Defects', value: criticalDefects(), icon: ICONS.circle, section: 'qa-defects', color: '#DC2626' },
-                    { label: 'Test Pass Rate', value: testPassRate() + '%', icon: ICONS.check, section: 'qa-defects', color: 'var(--success)' },
-                    { label: 'Active Test Runs', value: activeTestRuns(), icon: ICONS.flask, section: 'qa-defects', color: 'var(--info)' }
-                ];
-            case 'accounts':
-                return [
-                    { label: 'Monthly Revenue', value: '$' + monthlyRevenue().toLocaleString(), icon: ICONS.dollar, section: 'invoices', color: 'var(--success)' },
-                    { label: 'Pending Invoices', value: pendingInvoices(), icon: ICONS.file, section: 'invoices', color: 'var(--warning)' },
-                    { label: 'Overdue Invoices', value: overdueInvoices(), icon: ICONS.alert, section: 'invoices', color: 'var(--danger)' },
-                    { label: 'Approved Billable Hrs', value: approvedBillableHours() + 'h', icon: ICONS.hourglass, section: 'time-tracking', color: 'var(--info)' }
-                ];
-            default: // admin
-                return [
-                    { label: 'Active Projects', value: activeProjects(), icon: ICONS.folder, section: 'projects', color: 'var(--primary)' },
-                    { label: 'Open Tasks', value: openTasks(), icon: ICONS.clipboard, section: 'tasks', color: 'var(--info)' },
-                    { label: 'Open Defects', value: openDefects(), icon: ICONS.bug, section: 'qa-defects', color: 'var(--danger)' },
-                    { label: 'Revenue This Month', value: '$' + monthlyRevenue().toLocaleString(), icon: ICONS.dollar, section: 'invoices', color: 'var(--success)' },
-                    { label: 'Utilization', value: utilizationPct() + '%', icon: ICONS.chart, section: 'resources', color: 'var(--warning)' },
-                    { label: 'Delivery Risk', value: sprintCompletion() < 70 ? 'At Risk' : 'On Track', icon: sprintCompletion() < 70 ? ICONS.alert : ICONS.shield, section: 'sprints', color: sprintCompletion() < 70 ? 'var(--danger)' : 'var(--success)' }
-                ];
-        }
+    /* ══════════════════════════════════════════
+       SHARED RENDERING HELPERS
+       ══════════════════════════════════════════ */
+
+    /** Render a single metric card */
+    function cardHTML(icon, label, value, color, section) {
+        return '<div class="dashboard-metric-card" data-section="' + section + '">' +
+            '<div class="dashboard-metric-icon" style="color:' + color + '">' + icon + '</div>' +
+            '<div class="dashboard-metric-info">' +
+            '<div class="dashboard-metric-value">' + value + '</div>' +
+            '<div class="dashboard-metric-label">' + label + '</div></div></div>';
     }
 
-    /* ── insight banner ── */
-    function buildBanner() {
+    /** Wrap cards in a grid row */
+    function gridHTML(cards) {
+        return '<div class="dashboard-grid">' + cards.join('') + '</div>';
+    }
+
+    /** Insight banner */
+    function bannerHTML() {
         var warnings = [];
         if (criticalDefects() > 0) warnings.push({ text: criticalDefects() + ' critical defect' + (criticalDefects() > 1 ? 's' : '') + ' open', section: 'qa-defects' });
         if (utilizationPct() > 95) warnings.push({ text: 'Team utilization at ' + utilizationPct() + '%', section: 'resources' });
@@ -196,110 +168,171 @@ window.ERP_Dashboard = (function () {
             '<div><strong>Operations Running Smoothly</strong><div class="dashboard-banner-details">All systems are within normal parameters.</div></div></div></div>';
     }
 
-    /* ── recent activity ── */
-    function buildActivity() {
+    /** Recent activity list */
+    function activityHTML() {
         var items = [];
         stories().filter(function (s) { return s.status === 'done' || s.status === 'release_ready'; }).slice(0, 3).forEach(function (s) {
-            items.push({ text: 'Task completed: ' + s.title, badge: 'Done', badgeClass: 'badge-green', section: 'tasks' });
+            items.push({ text: 'Task completed: ' + s.title, badge: 'Done', cls: 'badge-green', section: 'tasks' });
         });
-        defects().filter(function (d) { return d.status === 'Open'; }).slice(0, 2).forEach(function (d) {
-            items.push({ text: 'Defect created: ' + d.title, badge: d.severity, badgeClass: d.severity === 'Critical' ? 'badge-red' : 'badge-amber', section: 'qa-defects' });
+        defectList().filter(function (d) { return d.status === 'Open'; }).slice(0, 2).forEach(function (d) {
+            items.push({ text: 'Defect created: ' + d.title, badge: d.severity, cls: d.severity === 'Critical' ? 'badge-red' : 'badge-amber', section: 'qa-defects' });
         });
-        invoices().slice(0, 2).forEach(function (inv) {
-            items.push({ text: 'Invoice ' + inv.id + ' (' + (inv.status || 'draft') + ')', badge: inv.status || 'draft', badgeClass: inv.status === 'sent' ? 'badge-blue' : 'badge-green', section: 'invoices' });
+        invoiceList().slice(0, 2).forEach(function (inv) {
+            items.push({ text: 'Invoice ' + inv.id + ' (' + (inv.status || 'draft') + ')', badge: inv.status || 'draft', cls: inv.status === 'sent' ? 'badge-blue' : 'badge-green', section: 'invoices' });
         });
-
         if (!items.length) return '<div class="card"><div class="card-title">Recent Activity</div><p class="text-muted" style="padding:16px 0;">No recent activity.</p></div>';
         var html = '<div class="card"><div class="card-title">Recent Activity</div><ul class="dashboard-activity-list">';
-        items.forEach(function (item) {
-            html += '<li class="dashboard-activity-item" data-section="' + item.section + '">' +
-                '<span class="dashboard-activity-text">' + item.text + '</span>' +
-                '<span class="badge ' + item.badgeClass + '">' + item.badge + '</span></li>';
+        items.forEach(function (it) {
+            html += '<li class="dashboard-activity-item" data-section="' + it.section + '"><span class="dashboard-activity-text">' + it.text + '</span><span class="badge ' + it.cls + '">' + it.badge + '</span></li>';
         });
-        html += '</ul></div>';
-        return html;
+        return html + '</ul></div>';
     }
 
-    /* ── upcoming deadlines ── */
-    function buildDeadlines() {
+    /** Upcoming deadlines list */
+    function deadlinesHTML() {
         var items = [];
         if (window.ERP_Sprint && window.ERP_Sprint.getSprints) {
             window.ERP_Sprint.getSprints().forEach(function (sp) {
-                if (sp.status !== 'completed') {
-                    items.push({ text: sp.name + ' ends soon', urgent: true, section: 'sprints' });
-                }
+                if (sp.status !== 'completed') items.push({ text: sp.name + ' ends soon', urgent: true, section: 'sprints' });
             });
         }
         var today = new Date().toISOString().substring(0, 10);
-        invoices().forEach(function (inv) {
-            if (inv.dueDate && inv.status === 'sent') {
-                var isUrgent = inv.dueDate <= today;
-                items.push({ text: inv.id + ' due ' + inv.dueDate, urgent: isUrgent, section: 'invoices' });
-            }
+        invoiceList().forEach(function (inv) {
+            if (inv.dueDate && inv.status === 'sent') items.push({ text: inv.id + ' due ' + inv.dueDate, urgent: inv.dueDate <= today, section: 'invoices' });
         });
         stories().filter(function (s) { return s.status === 'in_progress'; }).slice(0, 2).forEach(function (s) {
             items.push({ text: s.title + ' (in progress)', urgent: false, section: 'tasks' });
         });
-
         if (!items.length) return '<div class="card"><div class="card-title">Upcoming Deadlines</div><p class="text-muted" style="padding:16px 0;">No upcoming deadlines.</p></div>';
         var html = '<div class="card"><div class="card-title">Upcoming Deadlines</div><ul class="dashboard-deadline-list">';
-        items.slice(0, 6).forEach(function (item) {
-            html += '<li class="dashboard-deadline-item" data-section="' + item.section + '">' +
-                '<span class="dashboard-deadline-text">' + item.text + '</span>' +
-                (item.urgent ? '<span class="badge badge-red">Urgent</span>' : '<span class="badge badge-gray">Upcoming</span>') + '</li>';
+        items.slice(0, 6).forEach(function (it) {
+            html += '<li class="dashboard-deadline-item" data-section="' + it.section + '"><span class="dashboard-deadline-text">' + it.text + '</span>' +
+                (it.urgent ? '<span class="badge badge-red">Urgent</span>' : '<span class="badge badge-gray">Upcoming</span>') + '</li>';
         });
-        html += '</ul></div>';
-        return html;
+        return html + '</ul></div>';
     }
 
-    /* ── main render ── */
-    function init() {
+    /** Bottom split section */
+    function bottomSplitHTML() {
+        return '<div class="dashboard-split"><div class="dashboard-split-left">' + activityHTML() + '</div><div class="dashboard-split-right">' + deadlinesHTML() + '</div></div>';
+    }
+
+    /** Wire up all [data-section] click handlers */
+    function wireClicks(root) {
+        root.querySelectorAll('[data-section]').forEach(function (el) {
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', function () {
+                var section = el.getAttribute('data-section');
+                if (section) nav(section);
+            });
+        });
+    }
+
+    /* ══════════════════════════════════════════
+       PER-ROLE DASHBOARD RENDERERS
+       ══════════════════════════════════════════ */
+
+    function renderAdminDashboard(root) {
+        var row1 = [
+            cardHTML(ICONS.folder, 'Active Projects', activeProjects(), 'var(--primary)', 'projects'),
+            cardHTML(ICONS.clipboard, 'Open Tasks', openTasks(), 'var(--info)', 'tasks'),
+            cardHTML(ICONS.bug, 'Open Defects', openDefects(), 'var(--danger)', 'qa-defects'),
+            cardHTML(ICONS.dollar, 'Monthly Revenue', '$' + monthlyRevenue().toLocaleString(), 'var(--success)', 'invoices')
+        ];
+        var row2 = [
+            cardHTML(ICONS.chart, 'Utilization', utilizationPct() + '%', 'var(--warning)', 'resources'),
+            cardHTML(ICONS.activity, 'Recent Activity', stories().filter(function (s) { return s.status === 'done'; }).length + ' completed', 'var(--info)', 'tasks')
+        ];
+        root.innerHTML = bannerHTML() + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML();
+    }
+
+    function renderPMDashboard(root) {
+        var row1 = [
+            cardHTML(ICONS.chart, 'Sprint Completion', sprintCompletion() + '%', 'var(--primary)', 'sprints'),
+            cardHTML(ICONS.ban, 'Blocked Tasks', blockedTasks(), 'var(--danger)', 'tasks'),
+            cardHTML(ICONS.clipboard, 'Open Stories', openTasks(), 'var(--info)', 'backlog'),
+            cardHTML(ICONS.users, 'Team Utilization', utilizationPct() + '%', 'var(--warning)', 'resources')
+        ];
+        var row2 = [
+            cardHTML(ICONS.calendar, 'Upcoming Deadlines', invoiceList().filter(function (i) { return i.status === 'sent'; }).length + ' due', 'var(--danger)', 'invoices')
+        ];
+        root.innerHTML = bannerHTML() + gridHTML(row1) + gridHTML(row2) + bottomSplitHTML();
+    }
+
+    function renderDeveloperDashboard(root) {
+        var row1 = [
+            cardHTML(ICONS.check, 'My Tasks', myTasks(), 'var(--primary)', 'tasks'),
+            cardHTML(ICONS.calendar, 'Tasks Due Today', 0, 'var(--warning)', 'tasks'),
+            cardHTML(ICONS.clock, 'Hours This Week', hoursThisWeek() + 'h', 'var(--info)', 'time-tracking'),
+            cardHTML(ICONS.bug, 'My Open Defects', myDefects(), 'var(--danger)', 'qa-defects')
+        ];
+        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+    }
+
+    function renderQADashboard(root) {
+        var row1 = [
+            cardHTML(ICONS.bug, 'Open Defects', openDefects(), 'var(--danger)', 'qa-defects'),
+            cardHTML(ICONS.circle, 'Critical Defects', criticalDefects(), '#DC2626', 'qa-defects'),
+            cardHTML(ICONS.check, 'Test Pass Rate', testPassRate() + '%', 'var(--success)', 'qa-defects'),
+            cardHTML(ICONS.flask, 'Active Test Runs', activeTestRuns(), 'var(--info)', 'qa-defects')
+        ];
+        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+    }
+
+    function renderAccountsDashboard(root) {
+        var row1 = [
+            cardHTML(ICONS.dollar, 'Monthly Revenue', '$' + monthlyRevenue().toLocaleString(), 'var(--success)', 'invoices'),
+            cardHTML(ICONS.file, 'Pending Invoices', pendingInvoices(), 'var(--warning)', 'invoices'),
+            cardHTML(ICONS.alert, 'Overdue Invoices', overdueInvoices(), 'var(--danger)', 'invoices'),
+            cardHTML(ICONS.hourglass, 'Approved Billable Hrs', approvedBillableHours() + 'h', 'var(--info)', 'time-tracking')
+        ];
+        root.innerHTML = bannerHTML() + gridHTML(row1) + bottomSplitHTML();
+    }
+
+    /* ══════════════════════════════════════════
+       ROLE DISPATCHER
+       ══════════════════════════════════════════ */
+
+    function renderDashboardByRole(role) {
         var root = document.getElementById('dashboardRoot');
         if (!root) return;
 
-        var role = getRole();
-        var cards = cardsForRole(role);
+        // Scope label
+        var scope = '<div class="dashboard-scope">Showing: <strong>' + scopeLabel() + '</strong></div>';
+        root.innerHTML = scope;
 
-        var scopeHtml = '<div class="dashboard-scope">Showing: <strong>' + scopeLabel() + '</strong></div>';
-        var bannerHtml = buildBanner();
-
-        var row1 = cards.slice(0, 4);
-        var row2 = cards.slice(4);
-        var cardsHtml = '<div class="dashboard-grid">';
-        row1.forEach(function (c) {
-            cardsHtml += '<div class="dashboard-metric-card" data-section="' + c.section + '">' +
-                '<div class="dashboard-metric-icon" style="color:' + c.color + '">' + c.icon + '</div>' +
-                '<div class="dashboard-metric-info">' +
-                '<div class="dashboard-metric-value">' + c.value + '</div>' +
-                '<div class="dashboard-metric-label">' + c.label + '</div></div></div>';
-        });
-        cardsHtml += '</div>';
-        if (row2.length) {
-            cardsHtml += '<div class="dashboard-grid">';
-            row2.forEach(function (c) {
-                cardsHtml += '<div class="dashboard-metric-card" data-section="' + c.section + '">' +
-                    '<div class="dashboard-metric-icon" style="color:' + c.color + '">' + c.icon + '</div>' +
-                    '<div class="dashboard-metric-info">' +
-                    '<div class="dashboard-metric-value">' + c.value + '</div>' +
-                    '<div class="dashboard-metric-label">' + c.label + '</div></div></div>';
-            });
-            cardsHtml += '</div>';
+        switch (role) {
+            case 'pm': renderPMDashboard(root); break;
+            case 'developer': renderDeveloperDashboard(root); break;
+            case 'qa': renderQADashboard(root); break;
+            case 'accounts': renderAccountsDashboard(root); break;
+            default: renderAdminDashboard(root); break;
         }
 
-        var bottomHtml = '<div class="dashboard-split">' +
-            '<div class="dashboard-split-left">' + buildActivity() + '</div>' +
-            '<div class="dashboard-split-right">' + buildDeadlines() + '</div></div>';
+        // Prepend scope label (renderers overwrite innerHTML)
+        root.insertAdjacentHTML('afterbegin', scope);
 
-        root.innerHTML = scopeHtml + bannerHtml + cardsHtml + bottomHtml;
-
-        root.querySelectorAll('[data-section]').forEach(function (el) {
-            el.style.cursor = 'pointer';
-            el.addEventListener('click', function (e) {
-                var section = el.getAttribute('data-section');
-                if (section) loadSection(section);
-            });
-        });
+        // Wire up navigation on all clickable elements
+        wireClicks(root);
     }
 
-    return { init: init };
+    /* ══════════════════════════════════════════
+       INIT + ROLE-CHANGE LISTENER
+       ══════════════════════════════════════════ */
+
+    function initDashboard() {
+        renderDashboardByRole(getRole());
+
+        // Listen for role changes and re-render if dashboard is visible
+        var roleSelect = document.getElementById('roleSelect');
+        if (roleSelect && !roleSelect._dashboardBound) {
+            roleSelect._dashboardBound = true;
+            roleSelect.addEventListener('change', function () {
+                var dashRoot = document.getElementById('dashboardRoot');
+                if (dashRoot) renderDashboardByRole(getRole());
+            });
+        }
+    }
+
+    return { init: initDashboard };
 })();
